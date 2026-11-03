@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alpaca-trader"
+version = "0.1.0"
+description = "Automated US stock trading on Alpaca with backtrader backtesting"
+requires-python = ">=3.10"
+dependencies = [
+    "alpaca-py>=0.30",
+    "backtrader>=1.9.78",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "pyarrow>=14",
+    "matplotlib>=3.7",
+    "pyyaml>=6",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+trader = "trader.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

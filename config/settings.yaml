@@ -1,0 +1,57 @@
+# ---- Universe -------------------------------------------------------------
+symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, JPM, XOM]
+
+# ---- Market data ----------------------------------------------------------
+data:
+  # "sip" = full consolidated tape (best for backtests; free plan allows historical
+  # SIP data older than 15 minutes). Use "iex" if your plan rejects SIP requests.
+  feed: sip
+  adjustment: all          # adjust for splits AND dividends (total-return prices)
+  cache_dir: data/cache
+
+# ---- Strategy -------------------------------------------------------------
+# Options: sma_crossover, rsi_mean_reversion  (see src/trader/strategies/)
+strategy:
+  name: sma_crossover
+  params:
+    fast: 20
+    slow: 100
+
+# ---- Portfolio construction (shared by backtest AND live) -----------------
+portfolio:
+  cash_buffer: 0.02        # keep 2% cash so next-open gaps don't cause rejected orders
+  rebalance_band: 0.25     # only resize a position when it drifts >25% from target
+
+# ---- Backtest -------------------------------------------------------------
+backtest:
+  start: "2016-01-01"
+  end: null                # null = up to yesterday
+  cash: 100000
+  slippage_bps: 5          # per-side slippage, 5 bps = 0.05%
+  commission_per_share: 0.0  # Alpaca is commission-free; add regulatory fees here if you like
+  benchmark: SPY
+  results_dir: results
+
+# ---- Parameter sweep (fast vectorized engine) -----------------------------
+sweep:
+  split: 0.7               # first 70% of history = in-sample, last 30% = out-of-sample
+  metric: sharpe           # sharpe | cagr | calmar | sortino
+  grid:
+    fast: [10, 20, 30, 50]
+    slow: [100, 150, 200]
+
+# ---- Risk limits ----------------------------------------------------------
+# max_position_pct, max_gross_exposure and min_order_value also apply in backtests.
+risk:
+  max_position_pct: 0.20       # max 20% of equity in any one symbol
+  max_gross_exposure: 1.0      # no leverage
+  daily_loss_limit_pct: 0.03   # halt new buys if equity is down 3% vs. yesterday's close
+  max_orders_per_run: 20
+  min_order_value: 100         # skip tiny rebalancing trades (USD)
+  kill_switch_file: KILL_SWITCH  # create this file to flatten everything and stop
+
+# ---- Live runner ----------------------------------------------------------
+live:
+  run_minutes_after_open: 5    # trade shortly after the open, on yesterday's completed bar
+  lookback_days: 500           # calendar days of history to fetch for indicator warmup
+  log_dir: logs
