@@ -43,3 +43,28 @@ def test_performance_basic():
     p = performance(eq)
     assert abs(p["total_return"] - 0.10) < 1e-9
     assert p["max_drawdown"] == 0
+
+
+def test_walk_forward_uses_only_past_for_params(universe):
+    from trader.backtest import walk_forward
+
+    wf = walk_forward(universe, "sma_crossover", {"fast": [10, 20], "slow": [50, 100]},
+                      train_years=2, test_years=1)
+    assert len(wf.windows) >= 2
+    # every test window starts after its training window and windows don't overlap
+    for _, w in wf.windows.iterrows():
+        assert w.train_start < w.test_start <= w.test_end
+    assert (wf.windows.test_start.iloc[1:].values > wf.windows.test_end.iloc[:-1].values).all()
+    # stitched returns cover only test periods
+    assert wf.oos_returns.index[0].date() >= wf.windows.test_start.iloc[0]
+    assert wf.oos_returns.index.is_unique
+
+
+def test_walk_forward_replays_in_backtrader(universe):
+    from trader.backtest import walk_forward
+
+    wf = walk_forward(universe, "sma_crossover", {"fast": [10, 20], "slow": [50, 100]},
+                      train_years=2, test_years=1)
+    res = run_backtest(universe, None, signals=wf.signals, max_position_pct=0.25)
+    assert res.equity.index[0] == wf.oos_returns.index[0]
+    assert res.stats["trades"] > 0

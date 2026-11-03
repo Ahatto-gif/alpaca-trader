@@ -13,6 +13,7 @@ src/trader/
   data/loader.py            Alpaca historical bars, cached as parquet; CSV loader
   backtest/engine.py        backtrader event-driven backtest (fills at next open + slippage)
   backtest/vectorized.py    fast grid search with in-sample / out-of-sample split
+  backtest/walkforward.py   rolling re-optimisation; stitched out-of-sample results
   backtest/report.py        console summary, equity/trades CSV, chart.png
   live/runner.py            daily paper/live rebalancing loop
   live/risk.py              pre-trade risk checks
@@ -35,9 +36,20 @@ pytest                        # should be all green
 trader fetch                  # download + cache daily bars for the universe and SPY
 trader backtest               # full backtest with the strategy in settings.yaml
 trader sweep                  # grid search; look at the oos_* columns
+trader walkforward            # re-optimise every year on the past 3, trade the next 1
 trader backtest --strategy sma_crossover --param fast=30 --param slow=150
 trader backtest --strategy rsi_mean_reversion --symbols SPY,QQQ,IWM --start 2010-01-01
 ```
+
+### Walk-forward: the number to trust
+
+`trader walkforward` splits history into rolling windows (default: train 3 years, test 1 year).
+For each window it picks the best grid parameters on the train years, then trades the test year
+with them. The printed table shows which parameters won each window and how they did out of
+sample. The test years are then stitched together and replayed through backtrader for a full report.
+If the chosen parameters jump around every window, or the walk-forward results are far worse than
+the plain backtest, the strategy is probably curve-fit. Options: `--train-years`, `--test-years`,
+`--anchored` (expanding window), `--metric`.
 
 Each backtest writes `results/<timestamp>_<strategy>/` with `chart.png`, `equity.csv`,
 `trades.csv`, `signals.csv` and `summary.json`.
@@ -75,13 +87,12 @@ Every run is appended to `logs/journal.jsonl`.
 | Free trading | `slippage_bps` per side on every fill (default 5 bps). Add per-share fees via `commission_per_share`. |
 | Splits/dividends | `adjustment: all` gives total-return prices. |
 | Thin data | `feed: sip` uses the full consolidated tape. Switch to `iex` if your plan rejects SIP. |
-| Overfitting | `sweep` ranks on in-sample data and shows out-of-sample results next to them. Trust the OOS columns. |
+| Overfitting | `sweep` ranks on in-sample data and shows out-of-sample results next to them. `walkforward` goes further: each year is traded with parameters picked only from the years before it, then replayed through backtrader. |
 | Backtest ≠ live | Backtest and live share the same strategy, sizing (`portfolio.py`), rebalance band and cash rules. |
 | Unrealistic fills | Whole shares only, cash constraints enforced, and orders rejected for cash are counted and reported. |
 
 **Known limitations to address before real money:** survivorship bias (today's tickers looked great
-in hindsight; use a point-in-time universe), daily bars only (no intraday logic), no
-walk-forward re-optimisation yet, and market-on-open fills can be worse than the backtest's open price.
+in hindsight; use a point-in-time universe), daily bars only (no intraday logic), and market-on-open fills can be worse than the backtest's open price.
 
 ## Adding a strategy
 

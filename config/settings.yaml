@@ -40,6 +40,13 @@ sweep:
     fast: [10, 20, 30, 50]
     slow: [100, 150, 200]
 
+# ---- Walk-forward (re-optimise on a rolling window, trade the next period) -
+# Uses the sweep grid + metric above.
+walkforward:
+  train_years: 3           # optimise parameters on the previous 3 years...
+  test_years: 1            # ...then trade them for 1 year, and roll forward
+  anchored: false          # true = training window always starts at the first bar
+
 # ---- Risk limits ----------------------------------------------------------
 # max_position_pct, max_gross_exposure and min_order_value also apply in backtests.
 risk:

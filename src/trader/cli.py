@@ -63,6 +63,27 @@ def _load_universe(settings: dict, args, with_benchmark: bool = True):
     return bars, bench
 
 
+def _engine_kwargs(settings: dict) -> dict:
+    bt_cfg, risk, port = settings["backtest"], settings["risk"], settings.get("portfolio", {})
+    return dict(cash=bt_cfg["cash"], slippage_bps=bt_cfg["slippage_bps"],
+                commission_per_share=bt_cfg.get("commission_per_share", 0.0),
+                cash_buffer=port.get("cash_buffer", 0.02),
+                rebalance_band=port.get("rebalance_band", 0.25),
+                max_position_pct=risk["max_position_pct"],
+                max_gross_exposure=risk["max_gross_exposure"],
+                min_order_value=risk["min_order_value"])
+
+
+def _resolve_grid(settings: dict, args, name: str) -> dict:
+    if args.grid:
+        return {k: [_parse_params([f"{k}={v}"])[k] for v in vals.split("|")]
+                for k, vals in (g.split("=", 1) for g in args.grid)}
+    if name == settings["strategy"]["name"]:
+        return settings["sweep"]["grid"]
+    raise SystemExit(f'The config grid is for {settings["strategy"]["name"]}; '
+                     f'pass --grid for {name}, e.g. --grid "period=2|3|5"')
+
+
 def cmd_fetch(settings, args) -> None:
     bars, bench = _load_universe(settings, args)
     if bench is not None:
@@ -79,16 +100,10 @@ def cmd_backtest(settings, args) -> None:
     name, params = _strategy_cfg(settings, args)
     strategy = build_strategy(name, params)
     bars, bench = _load_universe(settings, args)
-    bt_cfg, risk, port = settings["backtest"], settings["risk"], settings.get("portfolio", {})
-    result = run_backtest(
-        bars, strategy, cash=bt_cfg["cash"], slippage_bps=bt_cfg["slippage_bps"],
-        commission_per_share=bt_cfg.get("commission_per_share", 0.0),
-        cash_buffer=port.get("cash_buffer", 0.02), rebalance_band=port.get("rebalance_band", 0.25),
-        max_position_pct=risk["max_position_pct"], max_gross_exposure=risk["max_gross_exposure"],
-        min_order_value=risk["min_order_value"], benchmark=bench)
+    result = run_backtest(bars, strategy, benchmark=bench, **_engine_kwargs(settings))
     print_summary(result, f"{strategy}  on  {', '.join(bars)}")
     if not args.no_save:
-        out = save_report(result, bt_cfg["results_dir"], strategy.name)
+        out = save_report(result, settings["backtest"]["results_dir"], strategy.name)
         print(f"\nSaved report to {out}")
 
 
@@ -97,14 +112,7 @@ def cmd_sweep(settings, args) -> None:
 
     name = args.strategy or settings["strategy"]["name"]
     sweep = settings["sweep"]
-    if args.grid:
-        grid = {k: [_parse_params([f"{k}={v}"])[k] for v in vals.split("|")]
-                for k, vals in (g.split("=", 1) for g in args.grid)}
-    elif name == settings["strategy"]["name"]:
-        grid = sweep["grid"]
-    else:
-        raise SystemExit(f'The config grid is for {settings["strategy"]["name"]}; '
-                         f'pass --grid for {name}, e.g. --grid "period=2|3|5"')
+    grid = _resolve_grid(settings, args, name)
     bars, _ = _load_universe(settings, args, with_benchmark=False)
     risk, port = settings["risk"], settings.get("portfolio", {})
     metric = args.metric or sweep["metric"]
@@ -124,6 +132,38 @@ def cmd_sweep(settings, args) -> None:
     print("\nOut-of-sample numbers are the honest ones. If the in-sample winner falls apart "
           "out of sample, the edge is probably overfit.")
     print(f"Verify the top pick with the full engine:\n  trader backtest --strategy {name} {flags}")
+
+
+def cmd_walkforward(settings, args) -> None:
+    from .backtest import run_backtest, walk_forward
+    from .backtest.report import print_summary, save_report
+
+    name = args.strategy or settings["strategy"]["name"]
+    grid = _resolve_grid(settings, args, name)
+    wf_cfg = settings.get("walkforward", {})
+    metric = args.metric or settings["sweep"]["metric"]
+    bars, bench = _load_universe(settings, args)
+    kw = _engine_kwargs(settings)
+    wf = walk_forward(bars, name, grid,
+                      train_years=args.train_years or wf_cfg.get("train_years", 3),
+                      test_years=args.test_years or wf_cfg.get("test_years", 1),
+                      anchored=args.anchored or wf_cfg.get("anchored", False), metric=metric,
+                      slippage_bps=kw["slippage_bps"], max_position_pct=kw["max_position_pct"],
+                      max_gross_exposure=kw["max_gross_exposure"], cash_buffer=kw["cash_buffer"])
+
+    print(f"\nWalk-forward of {name}: {len(wf.windows)} windows, optimising {metric}\n")
+    with pd.option_context("display.float_format", "{:,.3f}".format, "display.width", 200):
+        print(wf.windows.to_string(index=False))
+    print(f"\nParameters changed {wf.stats['param_changes']} times across "
+          f"{wf.stats['windows']} windows (fewer changes = more robust parameters).")
+
+    # Replay the stitched out-of-sample signals through the full backtrader engine.
+    result = run_backtest(bars, None, benchmark=bench, signals=wf.signals, **kw)
+    print_summary(result, f"Walk-forward {name} (out-of-sample only, backtrader)")
+    if not args.no_save:
+        out = save_report(result, settings["backtest"]["results_dir"], f"{name}_walkforward")
+        wf.windows.to_csv(out / "windows.csv", index=False)
+        print(f"\nSaved report to {out}")
 
 
 def cmd_live(settings, args) -> None:
@@ -182,6 +222,17 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--metric", choices=["sharpe", "cagr", "calmar", "sortino"])
     sp.add_argument("--top", type=int, default=15)
     sp.set_defaults(func=cmd_sweep)
+
+    sp = sub.add_parser("walkforward", help="rolling re-optimisation, out-of-sample results only")
+    data_args(sp)
+    sp.add_argument("--strategy")
+    sp.add_argument("--grid", action="append", help='e.g. --grid "fast=10|20|50"')
+    sp.add_argument("--metric", choices=["sharpe", "cagr", "calmar", "sortino"])
+    sp.add_argument("--train-years", type=float)
+    sp.add_argument("--test-years", type=float)
+    sp.add_argument("--anchored", action="store_true", help="expanding instead of rolling train window")
+    sp.add_argument("--no-save", action="store_true")
+    sp.set_defaults(func=cmd_walkforward)
 
     sp = sub.add_parser("live", help="run the strategy against your Alpaca account")
     sp.add_argument("--dry-run", action="store_true", help="compute orders but don't send them")

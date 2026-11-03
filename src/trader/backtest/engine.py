@@ -97,15 +97,21 @@ def align(bars: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     return {s: df.loc[common] for s, df in bars.items()}
 
 
-def run_backtest(bars: dict[str, pd.DataFrame], strategy: Strategy, *, cash: float = 100_000,
+def run_backtest(bars: dict[str, pd.DataFrame], strategy: Strategy | None, *, cash: float = 100_000,
                  slippage_bps: float = 5.0, commission_per_share: float = 0.0,
                  cash_buffer: float = 0.02, rebalance_band: float = 0.25,
                  max_position_pct: float = 0.2, max_gross_exposure: float = 1.0,
                  min_order_value: float = 100.0,
-                 benchmark: pd.DataFrame | None = None) -> BacktestResult:
+                 benchmark: pd.DataFrame | None = None,
+                 signals: dict[str, pd.Series] | None = None) -> BacktestResult:
+    """Run a backtest. Pass `signals` to replay precomputed signals (e.g. walk-forward)
+    instead of computing them from `strategy`; bars are then trimmed to the signal dates."""
     if not bars:
         raise ValueError("no data to backtest")
     bars = align(bars)
+    if signals is not None:
+        start = min(sig.index[0] for sig in signals.values())
+        bars = {s: df.loc[start:] for s, df in bars.items()}
 
     cerebro = bt.Cerebro(stdstats=False)
     cerebro.broker.setcash(cash)
@@ -117,7 +123,8 @@ def run_backtest(bars: dict[str, pd.DataFrame], strategy: Strategy, *, cash: flo
     signal_frame = {}
     for sym, df in bars.items():
         feed_df = df.copy()
-        feed_df["signal"] = strategy.signals(df)
+        feed_df["signal"] = (signals[sym].reindex(df.index).fillna(0.0) if signals is not None
+                             else strategy.signals(df))
         signal_frame[sym] = feed_df["signal"]
         cerebro.adddata(SignalData(dataname=feed_df), name=sym)
 
