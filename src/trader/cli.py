@@ -190,6 +190,44 @@ def cmd_account(settings, args) -> None:
         print(f"  {sym:6} {qty:>10g}")
 
 
+def cmd_report(settings, args) -> None:
+    from datetime import timedelta
+
+    from .config import load_credentials
+    from .data import load_bars
+    from .live.broker import AlpacaBroker
+    from .live.report import account_equity_history, compare_to_benchmark
+
+    broker = AlpacaBroker(load_credentials())
+    bench_sym = args.benchmark or settings["backtest"].get("benchmark", "SPY")
+    equity = account_equity_history(broker.trading, float(broker.account().equity))
+    equity = equity[equity > 0]
+    if args.start:
+        equity = equity[equity.index >= pd.Timestamp(args.start)]
+    if equity.empty:
+        raise SystemExit("No account equity history in that range yet.")
+
+    d = settings["data"]
+    first = equity.index[0] - timedelta(days=10)
+    bench = load_bars([bench_sym], first.date().isoformat(), feed=d["feed"],
+                      adjustment=d["adjustment"], cache_dir=d["cache_dir"]).get(bench_sym)
+    bench_close = bench["close"] if bench is not None else pd.Series(dtype=float)
+    live = broker.latest_prices([bench_sym]).get(bench_sym)
+    if live:  # today's bar isn't complete yet; use the latest trade for the live row
+        bench_close.loc[equity.index[-1]] = live
+    table = compare_to_benchmark(equity, bench_close)
+
+    pct = {c: "{:+.2%}".format for c in ("account_return", "benchmark_return", "difference")}
+    with pd.option_context("display.width", 200):
+        print(table.to_string(formatters={"equity": "{:,.2f}".format,
+                                          "benchmark": "{:,.2f}".format, **pct}))
+    last = table.iloc[-1]
+    verdict = "ahead of" if last["difference"] >= 0 else "behind"
+    print(f"\nSince {table.index[0].date()}: account {last['account_return']:+.2%}, "
+          f"{bench_sym} {last['benchmark_return']:+.2%} -> {abs(last['difference']):.2%} {verdict} "
+          f"{bench_sym}. (Last row uses live prices.)")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="trader", description=__doc__)
     p.add_argument("-c", "--config", help="path to settings.yaml")
@@ -244,6 +282,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("account", help="show account, clock and positions")
     sp.set_defaults(func=cmd_account)
+
+    sp = sub.add_parser("report", help="account performance vs benchmark since trading began")
+    sp.add_argument("--start", help="rebase from this date (default: first funded day)")
+    sp.add_argument("--benchmark", help="benchmark symbol (default: backtest.benchmark)")
+    sp.set_defaults(func=cmd_report)
     return p
 
 
