@@ -14,8 +14,8 @@ data:
 strategy:
   name: sma_crossover
   params:
-    fast: 20
-    slow: 100
+    fast: 10               # anchored walk-forward picked 10/200 in all 8 windows (2019-2026)
+    slow: 200
 
 # ---- Portfolio construction (shared by backtest AND live) -----------------
 portfolio:
