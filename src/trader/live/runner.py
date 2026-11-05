@@ -113,11 +113,16 @@ class LiveRunner:
         weights = target_weights(signals, max_position_pct=self.limits.max_position_pct,
                                  max_gross_exposure=self.limits.max_gross_exposure,
                                  cash_buffer=self.portfolio.get("cash_buffer", 0.02))
-        prices = {**last_close, **self.broker.latest_prices(symbols)}
         positions = self.broker.positions()
-        stray = set(positions) - set(symbols)
-        if stray:
-            log.warning("Ignoring positions not in the universe: %s", ", ".join(sorted(stray)))
+        stray = sorted(set(positions) - set(symbols))
+        liquidate = bool(self.settings["risk"].get("liquidate_outside_universe", False))
+        if stray and liquidate:
+            log.warning("Closing positions not in the universe: %s", ", ".join(stray))
+            weights.update({s: 0.0 for s in stray})   # target 0 -> plan_orders exits in full
+        elif stray:
+            log.warning("Ignoring positions not in the universe: %s", ", ".join(stray))
+        prices = {**last_close,
+                  **self.broker.latest_prices(symbols + (stray if liquidate else []))}
 
         orders = plan_orders(equity=equity, weights=weights, prices=prices,
                              current_shares=positions,
@@ -148,6 +153,7 @@ class LiveRunner:
 
         self._journal({"time": datetime.now(ET), "equity": equity, "signals": signals,
                        "weights": weights, "orders": approved, "submitted": submitted,
+                       "ref_prices": {s: prices[s] for s in approved},
                        "notes": notes, "dry_run": self.dry_run})
         if not self.dry_run:
             self._mark_run(today)

@@ -1,10 +1,11 @@
 """Strategy registry. Add your strategy class here to make it available in the config/CLI."""
 from .base import Strategy
+from .buy_and_hold import BuyAndHold
 from .rsi_mean_reversion import RsiMeanReversion
 from .sma_crossover import SmaCrossover
 
 REGISTRY: dict[str, type[Strategy]] = {
-    cls.name: cls for cls in (SmaCrossover, RsiMeanReversion)
+    cls.name: cls for cls in (SmaCrossover, RsiMeanReversion, BuyAndHold)
 }
 
 
