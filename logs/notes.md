@@ -1,0 +1,1 @@
+- 2026-11-05: scheduled run failed before starting (environment setup script error); rebalance run manually at 14:38 UK from the owner's session. Switched to SPY/QQQ, all 8 orders filled.
