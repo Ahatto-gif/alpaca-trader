@@ -1,5 +1,11 @@
 # Decisions (newest first)
 
+## 2026-11-05: owner declined leverage for now
+The owner was offered 1.5x (backtest 22.6%/yr, max DD -44%, about -70% in a 2008-style crash)
+and said to wait: the risk is too high. Keep `max_gross_exposure: 1.0`. Keep tracking
+`core_spy_qqq_x1.5` as a challenger, but don't ask again in every review. Raise it only if its
+forward record meets the promotion rule, or if the owner asks.
+
 ## 2026-11-05: switch live to 50% SPY / 50% QQQ (buy_and_hold), no leverage
 **Why.** The owner asked for the most profit. Every stock-picking or timing strategy we tested
 on universes chosen without hindsight did no better than holding the index (see LESSONS
