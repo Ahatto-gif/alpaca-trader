@@ -21,6 +21,12 @@ src/trader/
 tests/                      no-look-ahead, sizing, risk and engine-agreement tests
 ```
 
+## Memory and learning
+
+`CLAUDE.md` and `memory/` hold what's live and why (`DECISIONS.md`), what has been learned
+(`LESSONS.md`), and strategies tracked forward out of sample (`challengers.yaml`). `trader review`
+measures them. `research/` holds the scripts behind each decision.
+
 ## Setup
 
 ```bash
@@ -62,6 +68,7 @@ add `--csv-dir that/folder` to `backtest`, `sweep` or `fetch`.
 ```bash
 trader account                # check connection, equity, positions
 trader report                 # account return vs SPY since the first funded day
+trader review --out memory/reviews/$(date +%F).md   # account, fills, challenger leaderboard
 trader live --dry-run         # show the orders it *would* place, sends nothing
 trader live                   # one rebalance now (market must be open; --force to queue)
 trader live --loop            # long-running: rebalances once per day, 5 min after the open

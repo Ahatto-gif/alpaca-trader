@@ -1,5 +1,6 @@
 # ---- Universe -------------------------------------------------------------
-symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, JPM, XOM]
+# Core: half S&P 500, half Nasdaq-100. Why: see memory/DECISIONS.md (2026-11-05).
+symbols: [SPY, QQQ]
 
 # ---- Market data ----------------------------------------------------------
 data:
@@ -10,17 +11,17 @@ data:
   cache_dir: data/cache
 
 # ---- Strategy -------------------------------------------------------------
-# Options: sma_crossover, rsi_mean_reversion  (see src/trader/strategies/)
+# Options: buy_and_hold, sma_crossover, rsi_mean_reversion  (see src/trader/strategies/)
 strategy:
-  name: sma_crossover
-  params:
-    fast: 10               # anchored walk-forward picked 10/200 in all 8 windows (2019-2026)
-    slow: 200
+  name: buy_and_hold
+  params: {}
+  # Previous live strategy (2026-11-04/05): sma_crossover fast=10 slow=200 on
+  # AAPL,MSFT,NVDA,AMZN,GOOGL,META,JPM,XOM. Kept as a tracked challenger in memory/challengers.yaml.
 
 # ---- Portfolio construction (shared by backtest AND live) -----------------
 portfolio:
   cash_buffer: 0.02        # keep 2% cash so next-open gaps don't cause rejected orders
-  rebalance_band: 0.25     # only resize a position when it drifts >25% from target
+  rebalance_band: 0.10     # only resize a position when it drifts >10% from target
 
 # ---- Backtest -------------------------------------------------------------
 backtest:
@@ -36,6 +37,7 @@ backtest:
 sweep:
   split: 0.7               # first 70% of history = in-sample, last 30% = out-of-sample
   metric: sharpe           # sharpe | cagr | calmar | sortino
+  # This grid is for sma_crossover: `trader sweep --strategy sma_crossover --grid "fast=10|20" ...`
   grid:
     fast: [10, 20, 30, 50]
     slow: [100, 150, 200]
@@ -50,12 +52,13 @@ walkforward:
 # ---- Risk limits ----------------------------------------------------------
 # max_position_pct, max_gross_exposure and min_order_value also apply in backtests.
 risk:
-  max_position_pct: 0.20       # max 20% of equity in any one symbol
+  max_position_pct: 0.50       # max 50% of equity in any one symbol (two index ETFs)
   max_gross_exposure: 1.0      # no leverage
   daily_loss_limit_pct: 0.03   # halt new buys if equity is down 3% vs. yesterday's close
   max_orders_per_run: 20
   min_order_value: 100         # skip tiny rebalancing trades (USD)
   kill_switch_file: KILL_SWITCH  # create this file to flatten everything and stop
+  liquidate_outside_universe: true  # sell holdings that are not in `symbols`
 
 # ---- Live runner ----------------------------------------------------------
 live:

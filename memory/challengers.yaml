@@ -1,0 +1,44 @@
+# Strategies tracked forward from their `since` date (out-of-sample by construction).
+# `trader review` simulates each one and compares them. Rules for promoting a challenger to
+# live are in CLAUDE.md. Add new ideas here (with today's date as `since`) instead of
+# switching live on backtest evidence alone. Never edit `since` on an existing entry.
+champion: core_spy_qqq
+
+challengers:
+  core_spy_qqq:
+    kind: fixed
+    since: 2026-11-04
+    weights: {SPY: 0.5, QQQ: 0.5}
+    note: Live from 2026-11-05. Backtest 2017-26 CAGR 17.3%, Sharpe 0.94, maxDD -31%.
+  spy_only:
+    kind: fixed
+    since: 2026-11-04
+    weights: {SPY: 1.0}
+    note: The benchmark. Anything live must beat this to be worth the effort.
+  qqq_only:
+    kind: fixed
+    since: 2026-11-04
+    weights: {QQQ: 1.0}
+    note: More aggressive core. Backtest CAGR 19.9%, Sharpe 0.95, maxDD -36%.
+  core_spy_qqq_x1.5:
+    kind: fixed
+    since: 2026-11-04
+    weights: {SPY: 0.5, QQQ: 0.5}
+    leverage: 1.5
+    note: Margin at T-bill+2.5%. Backtest CAGR 22.6%, maxDD -44%. Promotion needs the user's OK (leverage).
+  sma_10_200_big8:
+    kind: slots
+    since: 2026-11-04
+    strategy: sma_crossover
+    params: {fast: 10, slow: 200}
+    symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, JPM, XOM]
+    max_position_pct: 0.2
+    note: Live 2026-11-04 to 2026-11-05. Backtest flattered by hindsight stock choice (see LESSONS).
+  momentum_12_1_top10:
+    kind: momentum
+    since: 2026-11-04
+    lookback: 252
+    skip: 21
+    top: 10
+    symbols: [AAPL, ABBV, ABT, ACN, AIG, ALL, AMGN, AMZN, AXP, BA, BAC, BAX, BIIB, BMY, BRK.B, C, CAT, CL, CMCSA, COF, COP, COST, CSCO, CVS, CVX, DD, DHR, DIS, DUK, EMR, EXC, F, META, FDX, FOXA, GD, GE, GILD, GM, GOOGL, GS, HAL, HD, HON, IBM, INTC, JNJ, JPM, KMI, KO, LLY, LMT, LOW, MA, MCD, MDLZ, MDT, MET, MMM, MO, MRK, MS, MSFT, NEE, NKE, ORCL, OXY, BKNG, PEP, PFE, PG, PM, PYPL, QCOM, SBUX, SLB, SO, SPG, T, TGT, TXN, UNH, UNP, UPS, USB, RTX, V, VZ, WFC, WMT, XOM, KHC, LVS]
+    note: Large caps (2016 S&P 100 survivors). Backtest on the full 2016 list matched SPY (15.2% vs 14.6%), lower Sharpe.
