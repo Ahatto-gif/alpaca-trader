@@ -1,1 +1,2 @@
 - 2026-11-05: scheduled run failed before starting (environment setup script error); rebalance run manually at 14:38 UK from the owner's session. Switched to SPY/QQQ, all 8 orders filled.
+- 2026-11-06: scheduled run traded fine (no orders needed) but its git push got a 403: scheduled sessions had no access to the repo. Log line saved from the owner's session; scheduled tasks re-pointed at that session.
