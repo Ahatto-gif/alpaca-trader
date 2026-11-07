@@ -1,5 +1,23 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-07: first weekly review
+- **Execution beats the model.** The 8 paper fills on 2026-11-05 averaged +1.9 bps (median +1.8,
+  worst +8.3 on NVDA) against the decision price, while backtests assume 5 bps. Keep 5 bps:
+  real-money fills will be worse than paper ones, and 8 fills is too few to cut the assumption.
+- **`summarize()` bug, fixed.** Forward records shorter than 2 days showed +0.00% return.
+  Now total return and drawdown are always shown; CAGR and Sharpe only after 20 days.
+- **The forward record lags a day.** Returns are open-to-open, so a day counts only after
+  the next open: Friday's move appears after Monday's open. On 2026-11-07 that left 1 day (11-05: core -3.7%).
+- **Infrastructure:**
+  - A setup script that does `cd <repo>` breaks scheduled sessions that don't have the repo
+    attached: the session never starts (2026-11-05).
+  - Scheduled sessions started fresh can clone a public repo but can't push (403), and they
+    have no add_repo tool (2026-11-06).
+  - Fix: the scheduled tasks now run inside the owner's long-lived session, which has push access.
+- **The account tracks the champion.** Equity went from about 99.8k at the switch (11-05 09:38 ET) to 96.7k
+  at the 11-06 close (-3.1%), in line with SPY/QQQ over the same window. The -0.9% gap vs SPY since
+  11-03 comes from the old 8-stock portfolio on 11-04, not from execution.
+
 ## 2026-11-05: strategy research (2017-2026, scripts in research/)
 - **Stock lists chosen today flatter backtests.** SMA 10/200 made 23% a year on 8 of today's
   mega caps. On lists fixed in 2016 it made 8.9% (30 largest) and 6.6% (~100 largest, including

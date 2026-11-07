@@ -45,3 +45,13 @@ def test_leaderboard_counts_only_days_after_since():
     ch = Challenger("x", "fixed", str(opens.index[2].date()), {"weights": {"A": 1.0}})
     lb = leaderboard([ch], bars, slippage_bps=0.0)
     assert lb.loc["x", "days"] == 2  # days 3 and 4; day 5 needs tomorrow's open
+
+
+def test_summarize_short_records_are_not_zeroed():
+    from trader.challengers import summarize
+    r = pd.Series([-0.037], index=pd.to_datetime(["2026-11-05"]))
+    s = summarize(r)
+    assert s["days"] == 1
+    assert s["total_return"] == pytest.approx(-0.037)
+    assert s["max_drawdown"] == pytest.approx(-0.037)   # a first-day loss is a drawdown
+    assert np.isnan(s["cagr"]) and np.isnan(s["sharpe"])  # too few days to annualise

@@ -109,14 +109,23 @@ def simulate(weights: pd.DataFrame, opens: pd.DataFrame, *, slippage_bps: float 
     return rets
 
 
+MIN_DAYS_FOR_RATIOS = 20  # annualised CAGR/Sharpe over a few days are noise
+
+
 def summarize(rets: pd.Series) -> dict:
-    if len(rets) < 2:
-        return {"days": len(rets), "total_return": 0.0, "cagr": float("nan"),
+    """Total return and drawdown always; CAGR and Sharpe only once there are enough days."""
+    if rets.empty:
+        return {"days": 0, "total_return": 0.0, "cagr": float("nan"),
                 "sharpe": float("nan"), "max_drawdown": 0.0}
     eq = (1 + rets).cumprod()
-    p = performance(eq)
-    return {"days": len(rets), "total_return": float(eq.iloc[-1] - 1), "cagr": p["cagr"],
-            "sharpe": p["sharpe"], "max_drawdown": p["max_drawdown"]}
+    peak = eq.cummax().clip(lower=1.0)          # the starting equity (1.0) counts as a peak
+    out = {"days": len(rets), "total_return": float(eq.iloc[-1] - 1),
+           "cagr": float("nan"), "sharpe": float("nan"),
+           "max_drawdown": float(min(0.0, (eq / peak - 1).min()))}
+    if len(rets) >= MIN_DAYS_FOR_RATIOS:
+        p = performance(eq)
+        out["cagr"], out["sharpe"] = p["cagr"], p["sharpe"]
+    return out
 
 
 def leaderboard(challengers: list[Challenger], bars: dict[str, pd.DataFrame], *,
