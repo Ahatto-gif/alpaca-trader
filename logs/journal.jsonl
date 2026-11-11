@@ -8,3 +8,5 @@
 {"time": "2026-11-09 09:36:34.555944-05:00", "equity": 98021.66, "signals": {"SPY": 1.0, "QQQ": 1.0}, "weights": {"SPY": 0.49, "QQQ": 0.49}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
 {"time": "2026-11-10 09:36:16.112308-05:00", "equity": 98814.22, "signals": {"SPY": 1.0, "QQQ": 1.0}, "weights": {"SPY": 0.49, "QQQ": 0.49}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": true}
 {"time": "2026-11-10 09:36:25.421526-05:00", "equity": 98863.34, "signals": {"SPY": 1.0, "QQQ": 1.0}, "weights": {"SPY": 0.49, "QQQ": 0.49}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
+{"time": "2026-11-11 09:36:17.206723-05:00", "equity": 100214.78, "signals": {"SPY": 1.0, "QQQ": 1.0}, "weights": {"SPY": 0.49, "QQQ": 0.49}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": true}
+{"time": "2026-11-11 09:36:23.283614-05:00", "equity": 100225.5, "signals": {"SPY": 1.0, "QQQ": 1.0}, "weights": {"SPY": 0.49, "QQQ": 0.49}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
