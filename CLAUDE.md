@@ -64,5 +64,13 @@ when it needs something from them.
 .venv/bin/trader review --start 2026-11-03 --out memory/reviews/$(date +%F).md
 .venv/bin/pytest -q
 ```
+**Dashboard**: https://claude.ai/artifact/Sa4exuAZTSW6j2YEzgr5ok (a claude.ai "Data" dashboard).
+Its six datasets (`account`, `equity`, `positions`, `challengers`, `trades`, `fills`) are attached CSV
+files written by `.venv/bin/trader dashboard-export --out logs/dashboard`. To refresh them:
+1. Upload each CSV as an asset of that artifact.
+2. Update each `datasets/<id>`: set `source.url` to the new `/_blob/<id>` and stamp `updated.at` and `edit`.
+3. Delete the old asset.
+Never put account numbers in them.
+
 `research/` holds the scripts behind the decisions (run from the repo root with `.venv/bin/python`).
 Historical data from Alpaca starts in 2016.
