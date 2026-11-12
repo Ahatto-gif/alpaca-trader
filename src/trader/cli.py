@@ -275,6 +275,20 @@ def cmd_trades(settings, args) -> None:
         print(f"Saved to {args.out}")
 
 
+def cmd_dashboard_export(settings, args) -> None:
+    from .config import PROJECT_ROOT, load_credentials
+    from .data import load_bars
+    from .live.broker import AlpacaBroker
+    from .live.dashboard import export_dashboard
+
+    broker = AlpacaBroker(load_credentials())
+    written = export_dashboard(settings, broker, out_dir=Path(args.out),
+                               memory_dir=PROJECT_ROOT / "memory",
+                               log_dir=Path(settings["live"]["log_dir"]), load_bars=load_bars)
+    for name, n in written.items():
+        print(f"{name:12} {n:5d} rows -> {Path(args.out) / (name + '.csv')}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="trader", description=__doc__)
     p.add_argument("-c", "--config", help="path to settings.yaml")
@@ -339,6 +353,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--since", default="2026-11-01", help="first date of the ledger window")
     sp.add_argument("--out", help="also write the ledger CSV here (e.g. memory/trades.csv)")
     sp.set_defaults(func=cmd_trades)
+
+    sp = sub.add_parser("dashboard-export", help="write the CSVs behind the visual dashboard")
+    sp.add_argument("--out", default="logs/dashboard", help="output folder")
+    sp.set_defaults(func=cmd_dashboard_export)
 
     sp = sub.add_parser("review", help="evidence for a review: account, fills, challengers")
     sp.add_argument("--start", help="account comparison from this date")
