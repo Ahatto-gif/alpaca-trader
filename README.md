@@ -68,7 +68,8 @@ add `--csv-dir that/folder` to `backtest`, `sweep` or `fetch`.
 ```bash
 trader account                # check connection, equity, positions
 trader report                 # account return vs SPY since the first funded day
-trader review --out memory/reviews/$(date +%F).md   # account, fills, challenger leaderboard
+trader review --out memory/reviews/$(date +%F).md   # account, fills, trade ledger, challengers
+trader trades                 # every closed trade: P&L split into market vs selection, execution cost
 trader live --dry-run         # show the orders it *would* place, sends nothing
 trader live                   # one rebalance now (market must be open; --force to queue)
 trader live --loop            # long-running: rebalances once per day, 5 min after the open

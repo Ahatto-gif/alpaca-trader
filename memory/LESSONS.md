@@ -1,5 +1,12 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-12: first trade-ledger read
+- The 6 closed trades (old 8-stock positions, held 2026-11-04 to 11-05, closed by the switch to SPY/QQQ)
+  lost -308.10: market +239.17, selection -547.27. NVDA alone was -733.78 of selection
+  (-5.6% vs SPY +0.3%). That's 6 trades over one day, so noise: no lesson about NVDA or the old
+  strategy beyond what the research already showed. Execution cost is unknown for these
+  (entries predate decision-price logging, added 2026-11-05).
+
 ## 2026-11-12
 - **YAML 1.1 reads `on`/`off`/`yes`/`no` as booleans.** `{on: 1.3}` became `{True: 1.3}` and
   `trader review` crashed. Use other key names (we use `above`/`below`), and check ticker lists

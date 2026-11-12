@@ -30,8 +30,21 @@ when it needs something from them.
      `slippage_bps` to match (honest backtests), and note it in LESSONS.
   3. Check that the account roughly tracks the champion's forward record. A big gap means an
      execution or code problem: investigate it.
-  4. Consider promotion (below). Log any change in DECISIONS.md.
-  5. Optionally register 1-2 new challengers with a written hypothesis. Keep the list short (<= 10).
+  4. Read the **trade ledger** section (the review also writes `memory/trades.csv`;
+     commit it). Apply "Learning from trades" below.
+  5. Consider promotion (below). Log any change in DECISIONS.md.
+  6. Optionally register 1-2 new challengers with a written hypothesis. Keep the list short (<= 10).
+- **Learning from trades.** Every closed trade's P&L is split into `market_pnl` (what the
+  benchmark did on the same money over the same days), `selection_pnl` (the rest), and
+  `execution_cost` (fills vs decision prices). Draw lessons from patterns, never from single trades:
+  - **Execution:** if mean execution cost is above the backtest assumption over 20+ fills, raise
+    `slippage_bps`. If it's concentrated in one symbol or time, look for the cause.
+  - **Selection:** a strategy's summed `selection_pnl` over 20+ closed trades (or 3+ months) is
+    evidence about its edge. Record it in LESSONS. It only changes the champion through the promotion rule.
+  - **Close reasons:** repeated losses from one reason (e.g. many small `rebalance trim` losses)
+    can mean a band or rule is too tight. Test the change as a challenger before switching.
+  - **Never** blacklist a symbol or change a rule because of one losing trade. It's noise, and
+    reacting to it is overfitting.
 - **Promotion rule** (challenger replaces champion). All of these must hold:
   - at least 126 trading days (about 6 months) of forward record;
   - forward CAGR at least 3 points above the champion's, and forward max drawdown no more than
@@ -47,6 +60,7 @@ when it needs something from them.
 .venv/bin/trader account            # equity, cash, positions, market clock
 .venv/bin/trader live --dry-run     # what the next rebalance would do
 .venv/bin/trader report --start 2026-11-03
+.venv/bin/trader trades              # closed-trade ledger: P&L = market + selection, execution cost
 .venv/bin/trader review --start 2026-11-03 --out memory/reviews/$(date +%F).md
 .venv/bin/pytest -q
 ```

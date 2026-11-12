@@ -2,7 +2,8 @@
 
 1. Account vs benchmark since trading began.
 2. Execution quality: real fill prices vs the price the runner decided on (journal ref_prices).
-3. Challenger leaderboard: forward (out-of-sample) record since each one was registered,
+3. Trade ledger: closed trades, P&L split into market vs selection, execution cost.
+4. Challenger leaderboard: forward (out-of-sample) record since each one was registered,
    plus the 2017+ backtest for context.
 """
 from __future__ import annotations
@@ -50,7 +51,8 @@ def slippage_table(journal_path: Path, get_order) -> pd.DataFrame:
 
 
 def build_review(settings: dict, broker, *, memory_dir: Path, log_dir: Path,
-                 load_bars, account_since: str | None = None) -> str:
+                 load_bars, account_since: str | None = None, ledger_since: str = "2026-11-01",
+                 ledger_out: Path | None = None) -> str:
     from .report import account_equity_history, compare_to_benchmark
 
     out: list[str] = [f"# Review {pd.Timestamp.now(tz='America/New_York').date()}", ""]
@@ -92,7 +94,39 @@ def build_review(settings: dict, broker, *, memory_dir: Path, log_dir: Path,
         out.append(slip.tail(20).to_markdown(index=False, floatfmt=".2f"))
     out.append("")
 
-    # 3. Challengers ----------------------------------------------------------
+    # 3. Trade ledger ---------------------------------------------------------
+    from ..ledger import account_ledger, summarize_ledger
+    out.append("## Trade ledger (closed trades)")
+    try:
+        led, warns = account_ledger(broker, journal_path=log_dir / "journal.jsonl", load_bars=load_bars,
+                                    data_cfg=d, bench=bench, since=ledger_since)
+    except Exception as exc:  # the review should still render
+        led, warns = pd.DataFrame(), [f"ledger failed: {exc}"]
+    if ledger_out is not None and not led.empty:
+        led.to_csv(ledger_out, index=False)
+    s = summarize_ledger(led)
+    if not s["trades"]:
+        out.append("No closed trades yet.")
+    else:
+        exe = (f"{s['execution_cost']:+,.2f} over {s['execution_known']} trades"
+               if s["execution_known"] else "unknown")
+        out.append(f"{s['trades']} closed trades, win rate {s['win_rate']:.0%}, P&L {s['total_pnl']:+,.2f} "
+                   f"= market {s['market_pnl']:+,.2f} + selection {s['selection_pnl']:+,.2f}; "
+                   f"execution cost {exe}. Avg win {s['avg_win']:+,.2f}, avg loss {s['avg_loss']:+,.2f}.")
+        out.append("")
+        out.append("By close reason: " + "; ".join(
+            f"{k}: {int(v['count'])} trades, {v['sum']:+,.2f}" for k, v in s["by_reason"].items()))
+        out.append("")
+        worst = led.nsmallest(5, "pnl")[["symbol", "opened", "closed", "pnl", "market_pnl",
+                                         "selection_pnl", "execution_cost", "close_reason"]]
+        out.append("Largest losses (judge patterns, not single trades):")
+        out.append("")
+        out.append(worst.to_markdown(index=False, floatfmt="+.2f"))
+    for w in warns:
+        out.append(f"- warning: {w}")
+    out.append("")
+
+    # 4. Challengers ----------------------------------------------------------
     chs = load_challengers(memory_dir / "challengers.yaml")
     champion = (__import__("yaml").safe_load((memory_dir / "challengers.yaml").read_text())
                 or {}).get("champion")

@@ -238,10 +238,40 @@ def cmd_review(settings, args) -> None:
     broker = AlpacaBroker(load_credentials())
     text = build_review(settings, broker, memory_dir=PROJECT_ROOT / "memory",
                         log_dir=Path(settings["live"]["log_dir"]), load_bars=load_bars,
-                        account_since=args.start)
+                        account_since=args.start,
+                        ledger_out=PROJECT_ROOT / "memory" / "trades.csv")
     print(text)
     if args.out:
         Path(args.out).write_text(text)
+        print(f"Saved to {args.out}")
+
+
+def cmd_trades(settings, args) -> None:
+    from .config import load_credentials
+    from .data import load_bars
+    from .ledger import account_ledger, summarize_ledger
+    from .live.broker import AlpacaBroker
+
+    broker = AlpacaBroker(load_credentials())
+    df, warnings = account_ledger(broker, journal_path=Path(settings["live"]["log_dir"]) / "journal.jsonl",
+                                  load_bars=load_bars, data_cfg=settings["data"],
+                                  bench=settings["backtest"].get("benchmark", "SPY"), since=args.since)
+    for w in warnings:
+        logging.warning(w)
+    if df.empty:
+        print("No closed trades yet.")
+    else:
+        cols = ["symbol", "opened", "closed", "days", "qty", "entry", "exit", "pnl", "return",
+                "market_pnl", "selection_pnl", "execution_cost", "close_reason"]
+        with pd.option_context("display.width", 220, "display.float_format", "{:,.2f}".format):
+            print(df[cols].to_string(index=False, formatters={"return": "{:+.2%}".format}))
+        s = summarize_ledger(df)
+        print(f"\n{s['trades']} closed trades, win rate {s['win_rate']:.0%}, P&L {s['total_pnl']:+,.2f} "
+              f"= market {s['market_pnl']:+,.2f} + selection {s['selection_pnl']:+,.2f} "
+              f"(execution cost: " + (f"{s['execution_cost']:+,.2f} over {s['execution_known']} trades)"
+                                     if s['execution_known'] else "unknown, no decision prices)"))
+    if args.out:
+        df.to_csv(args.out, index=False)
         print(f"Saved to {args.out}")
 
 
@@ -304,6 +334,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--start", help="rebase from this date (default: first funded day)")
     sp.add_argument("--benchmark", help="benchmark symbol (default: backtest.benchmark)")
     sp.set_defaults(func=cmd_report)
+
+    sp = sub.add_parser("trades", help="closed-trade ledger with P&L attribution")
+    sp.add_argument("--since", default="2026-11-01", help="first date of the ledger window")
+    sp.add_argument("--out", help="also write the ledger CSV here (e.g. memory/trades.csv)")
+    sp.set_defaults(func=cmd_trades)
 
     sp = sub.add_parser("review", help="evidence for a review: account, fills, challengers")
     sp.add_argument("--start", help="account comparison from this date")
