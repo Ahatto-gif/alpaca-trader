@@ -47,3 +47,13 @@ def test_plan_orders_respects_cash():
                          prices={"A": 100, "B": 100}, current_shares={"A": 60},
                          rebalance_band=0.25, min_order_value=0, cash=4_000, cash_reserve=200)
     assert orders == {"B": 38}
+
+
+def test_cash_sweep_tops_up_inside_the_band():
+    kwargs = dict(equity=10_000, prices={"A": 100}, rebalance_band=0.10, min_order_value=100,
+                  weights={"A": 0.95}, current_shares={"A": 90})   # 90 held vs 95 target: inside band
+    # 1,000 cash, 50 reserve -> 950 spare = 9.5% of equity > 1% -> sweep buys the shortfall.
+    assert plan_orders(cash=1_000, cash_reserve=50, cash_sweep_pct=0.01, **kwargs) == {"A": 5}
+    # Without the sweep (or with too little spare cash) the band holds.
+    assert plan_orders(cash=1_000, cash_reserve=50, **kwargs) == {}
+    assert plan_orders(cash=120, cash_reserve=50, cash_sweep_pct=0.01, **kwargs) == {}

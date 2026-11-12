@@ -26,7 +26,7 @@ class SignalData(bt.feeds.PandasData):
 
 class PortfolioStrategy(bt.Strategy):
     params = dict(max_position_pct=0.2, max_gross_exposure=1.0, cash_buffer=0.02,
-                  rebalance_band=0.25, min_order_value=100.0)
+                  rebalance_band=0.25, min_order_value=100.0, cash_sweep_pct=None)
 
     def __init__(self) -> None:
         self.equity: list[tuple] = []
@@ -64,6 +64,7 @@ class PortfolioStrategy(bt.Strategy):
             current_shares={d._name: self.getposition(d).size for d in self.datas},
             rebalance_band=self.p.rebalance_band, min_order_value=self.p.min_order_value,
             cash=self.broker.getcash(), cash_reserve=value * self.p.cash_buffer,
+            cash_sweep_pct=self.p.cash_sweep_pct,
         )
         by_name = {d._name: d for d in self.datas}
         for sym, delta in sorted(orders.items(), key=lambda kv: kv[1]):  # sells first
@@ -100,6 +101,7 @@ def align(bars: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
 def run_backtest(bars: dict[str, pd.DataFrame], strategy: Strategy | None, *, cash: float = 100_000,
                  slippage_bps: float = 5.0, commission_per_share: float = 0.0,
                  cash_buffer: float = 0.02, rebalance_band: float = 0.25,
+                 cash_sweep_pct: float | None = None,
                  max_position_pct: float = 0.2, max_gross_exposure: float = 1.0,
                  min_order_value: float = 100.0,
                  benchmark: pd.DataFrame | None = None,
@@ -130,7 +132,8 @@ def run_backtest(bars: dict[str, pd.DataFrame], strategy: Strategy | None, *, ca
 
     cerebro.addstrategy(PortfolioStrategy, max_position_pct=max_position_pct,
                         max_gross_exposure=max_gross_exposure, cash_buffer=cash_buffer,
-                        rebalance_band=rebalance_band, min_order_value=min_order_value)
+                        rebalance_band=rebalance_band, min_order_value=min_order_value,
+                        cash_sweep_pct=cash_sweep_pct)
     strat = cerebro.run()[0]
 
     equity = pd.Series(dict(strat.equity), name="equity").sort_index()

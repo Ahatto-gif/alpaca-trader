@@ -69,6 +69,7 @@ def _engine_kwargs(settings: dict) -> dict:
                 commission_per_share=bt_cfg.get("commission_per_share", 0.0),
                 cash_buffer=port.get("cash_buffer", 0.02),
                 rebalance_band=port.get("rebalance_band", 0.25),
+                cash_sweep_pct=port.get("cash_sweep_pct"),
                 max_position_pct=risk["max_position_pct"],
                 max_gross_exposure=risk["max_gross_exposure"],
                 min_order_value=risk["min_order_value"])

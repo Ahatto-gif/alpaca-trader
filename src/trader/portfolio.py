@@ -24,7 +24,8 @@ def target_weights(signals: dict[str, float], *, max_position_pct: float,
 def plan_orders(*, equity: float, weights: dict[str, float], prices: dict[str, float],
                 current_shares: dict[str, float], rebalance_band: float,
                 min_order_value: float, cash: float | None = None,
-                cash_reserve: float = 0.0) -> dict[str, int]:
+                cash_reserve: float = 0.0,
+                cash_sweep_pct: float | None = None) -> dict[str, int]:
     """Return {symbol: share delta}. Positive = buy, negative = sell. Whole shares only.
 
     A position is only resized when it drifts more than `rebalance_band` (as a fraction
@@ -33,8 +34,14 @@ def plan_orders(*, equity: float, weights: dict[str, float], prices: dict[str, f
 
     If `cash` is given, buys are scaled down so they fit in cash + sell proceeds - reserve
     (no accidental margin use when held positions have drifted above target).
+
+    If `cash_sweep_pct` is set and spare cash (cash - reserve) exceeds that fraction of equity,
+    buys of under-target positions ignore the rebalance band, so idle cash (dividends, a lowered
+    cash buffer) gets invested instead of waiting for a 10%+ drift.
     """
     orders: dict[str, int] = {}
+    sweep = (cash is not None and cash_sweep_pct is not None
+             and cash - cash_reserve > equity * cash_sweep_pct)
     for sym, w in weights.items():
         price = prices.get(sym)
         if not price or price <= 0 or math.isnan(price):
@@ -49,7 +56,7 @@ def plan_orders(*, equity: float, weights: dict[str, float], prices: dict[str, f
             orders[sym] = int(-held)  # full exit
             continue
         drift = abs(held * price - target_value) / target_value
-        if drift <= rebalance_band and held != 0:
+        if drift <= rebalance_band and held != 0 and not (sweep and delta > 0):
             continue
         if abs(delta) * price < min_order_value:
             continue

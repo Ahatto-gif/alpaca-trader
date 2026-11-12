@@ -1,5 +1,14 @@
 # Decisions (newest first)
 
+## 2026-11-12: smaller cash buffer + cash sweep; 3 new challengers (owner approved)
+- `portfolio.cash_buffer` 0.02 -> 0.005 and new `portfolio.cash_sweep_pct: 0.01`. When spare cash
+  is above 1% of equity, under-target positions are topped up even inside the 10% rebalance band.
+  Without the sweep, a lower buffer does nothing: positions sat about 1.5% under target, inside the band.
+  Full backtest 2016-26: CAGR 16.89% -> 17.14%, max DD -30.0% -> -30.7%. Same risk, idle cash invested.
+- New challengers tracked from 2026-11-12: `tilt_qqq80_spy20`, `core_trend_lev_1.3`
+  (leverage needs the owner's OK to promote), and `sector_momentum_top3`. Each has a hypothesis in
+  challengers.yaml.
+
 ## 2026-11-05: owner declined leverage for now
 The owner was offered 1.5x (backtest 22.6%/yr, max DD -44%, about -70% in a 2008-style crash)
 and said to wait: the risk is too high. Keep `max_gross_exposure: 1.0`. Keep tracking

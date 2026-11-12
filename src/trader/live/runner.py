@@ -128,7 +128,8 @@ class LiveRunner:
                              current_shares=positions,
                              rebalance_band=self.portfolio.get("rebalance_band", 0.25),
                              min_order_value=self.limits.min_order_value,
-                             cash=cash, cash_reserve=equity * self.portfolio.get("cash_buffer", 0.02))
+                             cash=cash, cash_reserve=equity * self.portfolio.get("cash_buffer", 0.02),
+                             cash_sweep_pct=self.portfolio.get("cash_sweep_pct"))
         approved, notes = apply_risk(orders, prices=prices, equity=equity, last_equity=last_equity,
                                      current_shares=positions,
                                      open_order_symbols=self.broker.open_order_symbols(),

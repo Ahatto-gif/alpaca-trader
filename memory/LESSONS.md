@@ -1,5 +1,11 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-12
+- **YAML 1.1 reads `on`/`off`/`yes`/`no` as booleans.** `{on: 1.3}` became `{True: 1.3}` and
+  `trader review` crashed. Use other key names (we use `above`/`below`), and check ticker lists
+  for symbols like ON, Y or NO too.
+- The account has tracked SPY since 2026-11-11 (+0.24% vs +0.23% since 11-03). The 11-04 entry gap has closed.
+
 ## 2026-11-07: first weekly review
 - **Execution beats the model.** The 8 paper fills on 2026-11-05 averaged +1.9 bps (median +1.8,
   worst +8.3 on NVDA) against the decision price, while backtests assume 5 bps. Keep 5 bps:

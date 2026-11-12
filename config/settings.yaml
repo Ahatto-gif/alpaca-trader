@@ -20,7 +20,8 @@ strategy:
 
 # ---- Portfolio construction (shared by backtest AND live) -----------------
 portfolio:
-  cash_buffer: 0.02        # keep 2% cash so next-open gaps don't cause rejected orders
+  cash_buffer: 0.005       # keep 0.5% cash for next-open gaps (was 2%; idle cash earns nothing)
+  cash_sweep_pct: 0.01     # if spare cash > 1% of equity, top up under-target positions
   rebalance_band: 0.10     # only resize a position when it drifts >10% from target
 
 # ---- Backtest -------------------------------------------------------------

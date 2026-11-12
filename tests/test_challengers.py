@@ -55,3 +55,16 @@ def test_summarize_short_records_are_not_zeroed():
     assert s["total_return"] == pytest.approx(-0.037)
     assert s["max_drawdown"] == pytest.approx(-0.037)   # a first-day loss is a drawdown
     assert np.isnan(s["cagr"]) and np.isnan(s["sharpe"])  # too few days to annualise
+
+
+def test_trend_leverage_switches_with_the_trend():
+    idx = pd.bdate_range("2025-01-01", periods=30)
+    up = np.r_[np.linspace(100, 120, 20), np.linspace(119, 90, 10)]
+    closes = pd.DataFrame({"SPY": up, "QQQ": up}, index=idx)
+    ch = Challenger("t", "fixed", "2025-01-01",
+                    {"weights": {"SPY": 0.5, "QQQ": 0.5},
+                     "trend_leverage": {"symbol": "SPY", "window": 5, "above": 1.3, "below": 1.0}})
+    w = target_weight_frame(ch, closes, cash_buffer=0.0)
+    assert w.iloc[3].sum() == pytest.approx(1.0)    # warm-up: no average yet -> off
+    assert w.iloc[15].sum() == pytest.approx(1.3)   # rising: above the average -> on
+    assert w.iloc[-1].sum() == pytest.approx(1.0)   # falling: below the average -> off

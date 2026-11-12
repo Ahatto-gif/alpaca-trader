@@ -42,3 +42,22 @@ challengers:
     top: 10
     symbols: [AAPL, ABBV, ABT, ACN, AIG, ALL, AMGN, AMZN, AXP, BA, BAC, BAX, BIIB, BMY, BRK.B, C, CAT, CL, CMCSA, COF, COP, COST, CSCO, CVS, CVX, DD, DHR, DIS, DUK, EMR, EXC, F, META, FDX, FOXA, GD, GE, GILD, GM, GOOGL, GS, HAL, HD, HON, IBM, INTC, JNJ, JPM, KMI, KO, LLY, LMT, LOW, MA, MCD, MDLZ, MDT, MET, MMM, MO, MRK, MS, MSFT, NEE, NKE, ORCL, OXY, BKNG, PEP, PFE, PG, PM, PYPL, QCOM, SBUX, SLB, SO, SPG, T, TGT, TXN, UNH, UNP, UPS, USB, RTX, V, VZ, WFC, WMT, XOM, KHC, LVS]
     note: Large caps (2016 S&P 100 survivors). Backtest on the full 2016 list matched SPY (15.2% vs 14.6%), lower Sharpe.
+  tilt_qqq80_spy20:
+    kind: fixed
+    since: 2026-11-12
+    weights: {QQQ: 0.8, SPY: 0.2}
+    note: "Hypothesis: most of QQQ-only's extra return with a little less concentration. Between the champion (50/50) and qqq_only."
+  core_trend_lev_1.3:
+    kind: fixed
+    since: 2026-11-12
+    weights: {SPY: 0.5, QQQ: 0.5}
+    trend_leverage: {symbol: SPY, window: 200, above: 1.3, below: 1.0}
+    note: "Hypothesis: leverage only while SPY > its 200-day average catches part of the leverage gain but sidesteps most of the deep bear markets (which mostly happen below the average). Margin at T-bill + 2.5%. Leverage: promotion needs the owner's OK."
+  sector_momentum_top3:
+    kind: momentum
+    since: 2026-11-12
+    lookback: 252
+    skip: 21
+    top: 3
+    symbols: [XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY]
+    note: "Hypothesis: momentum across the 11 S&P sector funds, rotated monthly, tests momentum without single-stock hindsight bias. Not run on 2016-26 history before registering, so its record is clean."

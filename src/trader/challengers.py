@@ -7,6 +7,8 @@ judged on, its tracked record is genuinely out-of-sample.
 
 Spec kinds:
   fixed:    {weights: {SPY: 0.5, QQQ: 0.5}, leverage: 1.0}
+            optional trend_leverage: {symbol: SPY, window: 200, above: 1.3, below: 1.0}
+            (leverage `above` while the close is above its `window`-day average, else `below`)
   slots:    {strategy: sma_crossover, params: {...}, symbols: [...]}  (same sizing as live)
   momentum: {lookback: 252, skip: 21, top: 10, symbols: [...]}       (monthly, equal weight)
 """
@@ -35,7 +37,9 @@ class Challenger:
 
     def symbols(self) -> list[str]:
         if self.kind == "fixed":
-            return list(self.spec["weights"])
+            tl = self.spec.get("trend_leverage") or {}
+            extra = [tl.get("symbol", "SPY")] if tl else []
+            return list(dict.fromkeys(list(self.spec["weights"]) + extra))
         return list(self.spec["symbols"])
 
 
@@ -63,7 +67,12 @@ def target_weight_frame(ch: Challenger, closes: pd.DataFrame, *, cash_buffer: fl
     syms = [s for s in ch.symbols() if s in closes]
     w = pd.DataFrame(0.0, index=idx, columns=syms)
     if ch.kind == "fixed":
-        lev = float(ch.spec.get("leverage", 1.0))
+        lev = pd.Series(float(ch.spec.get("leverage", 1.0)), index=idx)
+        tl = ch.spec.get("trend_leverage")
+        if tl:
+            c = closes[tl.get("symbol", "SPY")]
+            up = c > c.rolling(int(tl.get("window", 200))).mean()   # False during warm-up
+            lev = up.map({True: float(tl["above"]), False: float(tl.get("below", 1.0))})
         for s, x in ch.spec["weights"].items():
             if s in w:
                 w[s] = x * lev * (1 - cash_buffer)
@@ -129,7 +138,8 @@ def summarize(rets: pd.Series) -> dict:
 
 
 def leaderboard(challengers: list[Challenger], bars: dict[str, pd.DataFrame], *,
-                slippage_bps: float = 5.0, since: str | None = None) -> pd.DataFrame:
+                slippage_bps: float = 5.0, since: str | None = None,
+                cash_buffer: float = 0.02) -> pd.DataFrame:
     """Forward record of every challenger from its own `since` (or a common `since`)."""
     closes = pd.DataFrame({s: df["close"] for s, df in bars.items()}).sort_index()
     opens = pd.DataFrame({s: df["open"] for s, df in bars.items()}).sort_index()
@@ -138,7 +148,7 @@ def leaderboard(challengers: list[Challenger], bars: dict[str, pd.DataFrame], *,
         tbill = (opens["BIL"].shift(-1) / opens["BIL"] - 1).fillna(0.0)
     rows = []
     for ch in challengers:
-        w = target_weight_frame(ch, closes)
+        w = target_weight_frame(ch, closes, cash_buffer=cash_buffer)
         r = simulate(w, opens, slippage_bps=slippage_bps, tbill=tbill)
         start = pd.Timestamp(since or ch.since)
         # Drop the final row: its open-to-open return needs tomorrow's open.

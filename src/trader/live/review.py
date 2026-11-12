@@ -100,7 +100,8 @@ def build_review(settings: dict, broker, *, memory_dir: Path, log_dir: Path,
     first = min(pd.Timestamp(c.since) for c in chs)
     bars = load_bars(syms, (first - timedelta(days=420)).date().isoformat(), feed=d["feed"],
                      adjustment=d["adjustment"], cache_dir=d["cache_dir"])
-    fwd = leaderboard(chs, bars, slippage_bps=model)
+    buf = settings.get("portfolio", {}).get("cash_buffer", 0.02)
+    fwd = leaderboard(chs, bars, slippage_bps=model, cash_buffer=buf)
     out.append(f"## Challengers: forward record (champion: {champion})")
     out.append("Out-of-sample: each strategy is judged only on days after it was registered.")
     out.append("")
@@ -108,7 +109,7 @@ def build_review(settings: dict, broker, *, memory_dir: Path, log_dir: Path,
     out.append("")
     hist_bars = load_bars(syms, "2016-01-01", feed=d["feed"], adjustment=d["adjustment"],
                           cache_dir=d["cache_dir"])
-    hist = leaderboard(chs, hist_bars, slippage_bps=model, since="2017-01-03")
+    hist = leaderboard(chs, hist_bars, slippage_bps=model, since="2017-01-03", cash_buffer=buf)
     out.append("## Challengers: backtest 2017 to now (context only; in-sample for anything tuned on it)")
     out.append("")
     out.append(_fmt(hist).to_markdown())
