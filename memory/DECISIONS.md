@@ -1,5 +1,16 @@
 # Decisions (newest first)
 
+## 2026-11-12: switch the core to cheaper funds (VOO + QQQM); track international (owner approved)
+- `symbols: [VOO, QQQM]` replace SPY/QQQ: same indexes, lower fees (VOO 0.03% vs 0.0945%; QQQM 0.15% vs
+  0.20%), about 0.06%/yr saved. Since 2021 VOO beat SPY by 0.9 pts and QQQM beat QQQ by 0.5 pts in total;
+  daily correlation is above 0.999. The next run sells SPY/QQQ and buys VOO/QQQM (liquidate_outside_universe).
+  New champion entry `core_voo_qqqm`; `core_spy_qqq` stays registered.
+- International: backtest 2017-26 showed every international slice lowered both CAGR and Sharpe
+  (20% VXUS: 15.9% vs 17.5%), with little drawdown benefit (correlation 0.85 with SPY). So it isn't live.
+  It's tracked forward as `global_40_40_20` and `vt_world` in case the US lags (as in 2000-09, or in 2025: VXUS +33% vs live +19%).
+- Note: `trader backtest` on the live config now starts in Oct 2020 (QQQM's launch); use the
+  challenger backtests in `trader review` for 2017+ context.
+
 ## 2026-11-12: smaller cash buffer + cash sweep; 3 new challengers (owner approved)
 - `portfolio.cash_buffer` 0.02 -> 0.005 and new `portfolio.cash_sweep_pct: 0.01`. When spare cash
   is above 1% of equity, under-target positions are topped up even inside the 10% rebalance band.

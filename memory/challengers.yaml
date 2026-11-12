@@ -2,14 +2,14 @@
 # `trader review` simulates each one and compares them. Rules for promoting a challenger to
 # live are in CLAUDE.md. Add new ideas here (with today's date as `since`) instead of
 # switching live on backtest evidence alone. Never edit `since` on an existing entry.
-champion: core_spy_qqq
+champion: core_voo_qqqm
 
 challengers:
   core_spy_qqq:
     kind: fixed
     since: 2026-11-04
     weights: {SPY: 0.5, QQQ: 0.5}
-    note: Live from 2026-11-05. Backtest 2017-26 CAGR 17.3%, Sharpe 0.94, maxDD -31%.
+    note: Live 2026-11-05 to 2026-11-12, then replaced by the same mix in cheaper funds (core_voo_qqqm). Backtest 2017-26 CAGR 17.3%, Sharpe 0.94, maxDD -31%.
   spy_only:
     kind: fixed
     since: 2026-11-04
@@ -61,3 +61,18 @@ challengers:
     top: 3
     symbols: [XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY]
     note: "Hypothesis: momentum across the 11 S&P sector funds, rotated monthly, tests momentum without single-stock hindsight bias. Not run on 2016-26 history before registering, so its record is clean."
+  core_voo_qqqm:
+    kind: fixed
+    since: 2026-11-12
+    weights: {VOO: 0.5, QQQM: 0.5}
+    note: "Live from 2026-11-13: the champion's 50/50 in cheaper share classes (about -0.06%/yr fees). Should track core_spy_qqq a little ahead."
+  global_40_40_20:
+    kind: fixed
+    since: 2026-11-12
+    weights: {SPY: 0.4, QQQ: 0.4, VXUS: 0.2}
+    note: "Hypothesis: insurance against a decade of US underperformance (like 2000-09). Backtest 2017-26: CAGR 15.9% vs 17.5% for the champion, maxDD -30.7%, Sharpe 0.90."
+  vt_world:
+    kind: fixed
+    since: 2026-11-12
+    weights: {VT: 1.0}
+    note: "Hypothesis: the whole world weighted by market cap (about 62% US), the 'no opinion' portfolio. Backtest 2017-26: CAGR 12.0%, Sharpe 0.77. Wins if the US lags."

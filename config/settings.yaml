@@ -1,6 +1,7 @@
 # ---- Universe -------------------------------------------------------------
-# Core: half S&P 500, half Nasdaq-100. Why: see memory/DECISIONS.md (2026-11-05).
-symbols: [SPY, QQQ]
+# Core: half S&P 500, half Nasdaq-100, via the cheapest share classes (VOO 0.03%, QQQM 0.15%;
+# same indexes as SPY/QQQ). Why: see memory/DECISIONS.md (2026-11-05, 2026-11-12).
+symbols: [VOO, QQQM]
 
 # ---- Market data ----------------------------------------------------------
 data:
