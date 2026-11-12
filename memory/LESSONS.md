@@ -1,5 +1,10 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-12: dashboard refresh
+- Deleting a dashboard file right after replacing it broke the open page: all six datasets 404'd
+  while the page still held the old links. Keep the previous copy for a day; delete only unreferenced
+  assets older than 24 hours.
+
 ## 2026-11-12: first trade-ledger read
 - The 6 closed trades (old 8-stock positions, held 2026-11-04 to 11-05, closed by the switch to SPY/QQQ)
   lost -308.10: market +239.17, selection -547.27. NVDA alone was -733.78 of selection

@@ -69,7 +69,9 @@ Its six datasets (`account`, `equity`, `positions`, `challengers`, `trades`, `fi
 files written by `.venv/bin/trader dashboard-export --out logs/dashboard`. To refresh them:
 1. Upload each CSV as an asset of that artifact.
 2. Update each `datasets/<id>`: set `source.url` to the new `/_blob/<id>` and stamp `updated.at` and `edit`.
-3. Delete the old asset.
+3. Delete only assets that no dataset references *and* that are more than 24 hours old. Never delete the
+   copy you just replaced: an open dashboard keeps asking for it until it picks up the new link,
+   which caused a page of 404s on 2026-11-12.
 Never put account numbers in them.
 
 `research/` holds the scripts behind the decisions (run from the repo root with `.venv/bin/python`).
