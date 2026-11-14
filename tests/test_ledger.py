@@ -55,6 +55,15 @@ def test_journal_reasons(tmp_path):
     assert j["d"].reason == "rebalance trim"
 
 
+def test_bench_lookup_prefers_the_fill_minute():
+    bars = pd.DataFrame({"open": [500.0]}, index=pd.DatetimeIndex(["2026-11-04"]))
+    f = bench_lookup(bars, live_price=510.0, intraday=lambda x: 495.0 if x.day == 4 else None)
+    assert f(t(4)) == 495.0          # minute bar wins over the daily open
+    assert f(t(9)) == 510.0          # no minute bar, no daily bar -> live price
+    g = bench_lookup(bars, intraday=lambda x: (_ for _ in ()).throw(RuntimeError("no data")))
+    assert g(t(4)) == 500.0          # an intraday failure falls back to the open
+
+
 def test_bench_lookup_uses_the_open_then_live_price():
     bars = pd.DataFrame({"open": [500.0]}, index=pd.DatetimeIndex(["2026-11-04"]))
     f = bench_lookup(bars, live_price=510.0)

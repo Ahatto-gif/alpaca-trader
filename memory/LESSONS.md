@@ -1,5 +1,21 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-14: weekly review
+- **Execution:** 12 fills average +3.6 bps (median +1.8) against the 5 bps assumption, so slippage_bps
+  stays at 5. The outlier was the VOO buy on 11-12 at +17 bps, the first fill in a thinner fund.
+  One fill isn't a pattern: watch VOO/QQQM fills in the ledger.
+- **Bug fixed (backtests):** a fixed-weight challenger with a fund that didn't exist yet counted
+  that share as earning 0%. core_voo_qqqm showed 12.3%/yr vs 17.5% for the identical SPY/QQQ mix.
+  Backtests now start once every fund has prices (QQQM: 2020-10-13), giving 15.9%/yr there.
+- **Bug fixed (ledger):** market P&L used SPY's daily open, but fills come minutes after it. On
+  11-05 SPY fell about 1% in that gap, so the SPY-vs-SPY trade showed +454 of fake "selection"
+  P&L. It now uses the SPY 1-minute bar at each fill time (fallback: the daily open), which gives -59,
+  the residual being fill noise. Attribution is only as good as the benchmark's timing.
+- **Account vs champion:** -0.39% vs SPY -0.30% since 11-03 (10 days). In line; no execution problem.
+- **Promotion:** nothing is close (6 forward days at most, against 126 needed). No new challengers this week.
+- **Infrastructure:** the 11-13 daily run fired 50 minutes late (15:24 UTC). The market was still open,
+  so it was harmless. If a run fires after the close, the next one simply catches up.
+
 ## 2026-11-12: dashboard refresh
 - Deleting a dashboard file right after replacing it broke the open page: all six datasets 404'd
   while the page still held the old links. Keep the previous copy for a day; delete only unreferenced

@@ -47,6 +47,17 @@ def test_leaderboard_counts_only_days_after_since():
     assert lb.loc["x", "days"] == 2  # days 3 and 4; day 5 needs tomorrow's open
 
 
+def test_leaderboard_starts_when_every_fund_exists():
+    idx = pd.bdate_range("2026-01-01", periods=8)
+    a = pd.Series([100, 101, 102, 103, 104, 105, 106, 107.0], index=idx)
+    b = pd.Series([None, None, None, 50, 51, 52, 53, 54.0], index=idx)   # launches on day 3
+    bars = {"A": pd.DataFrame({"open": a, "close": a}), "B": pd.DataFrame({"open": b, "close": b})}
+    ch = Challenger("x", "fixed", "2026-01-01", {"weights": {"A": 0.5, "B": 0.5}})
+    lb = leaderboard([ch], bars, slippage_bps=0.0, cash_buffer=0.0)
+    assert str(lb.loc["x", "since"]) == str(idx[3].date())
+    assert lb.loc["x", "days"] == 3   # days 4-6; day 7 needs tomorrow's open
+
+
 def test_summarize_short_records_are_not_zeroed():
     from trader.challengers import summarize
     r = pd.Series([-0.037], index=pd.to_datetime(["2026-11-05"]))

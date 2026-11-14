@@ -165,13 +165,22 @@ def fills_from_alpaca(trading_client, since: datetime) -> list[Fill]:
     return out
 
 
-def bench_lookup(bench_bars: pd.DataFrame, live_price: float | None = None
+def bench_lookup(bench_bars: pd.DataFrame, live_price: float | None = None,
+                 intraday: Callable[[datetime], float | None] | None = None
                  ) -> Callable[[datetime], float | None]:
-    """Benchmark price near a fill time. The runner trades just after the open, so use that
-    day's open; for days without a completed bar yet (today), fall back to `live_price`."""
+    """Benchmark price at a fill time. `intraday(t)` (the minute bar of the fill) is used first:
+    fills land minutes after the open, and on a fast day the open alone can be 1% off, which
+    then shows up as fake selection P&L. Fallbacks: that day's open, then `live_price` (today)."""
     opens = bench_bars["open"] if bench_bars is not None and len(bench_bars) else pd.Series(dtype=float)
 
     def price(t: datetime) -> float | None:
+        if intraday is not None:
+            try:
+                p = intraday(t)
+            except Exception:  # no minute data (too recent, feed refused): fall back
+                p = None
+            if p:
+                return float(p)
         day = pd.Timestamp(pd.Timestamp(t).tz_convert("America/New_York").date()) \
             if pd.Timestamp(t).tzinfo else pd.Timestamp(pd.Timestamp(t).date())
         if day in opens.index:
@@ -189,4 +198,26 @@ def account_ledger(broker, *, journal_path: Path, load_bars, data_cfg: dict, ben
     bars = load_bars([bench], since, feed=data_cfg["feed"], adjustment=data_cfg["adjustment"],
                      cache_dir=data_cfg["cache_dir"]).get(bench)
     live = broker.latest_prices([bench]).get(bench)
-    return build_ledger(fills, journal_index(journal_path), bench_lookup(bars, live))
+    return build_ledger(fills, journal_index(journal_path),
+                        bench_lookup(bars, live, minute_price(broker.data, bench, data_cfg["feed"])))
+
+
+def minute_price(data_client, symbol: str, feed: str) -> Callable[[datetime], float | None]:
+    """Close of the 1-minute bar containing time t (cached per minute)."""
+    from alpaca.data.enums import DataFeed
+    from alpaca.data.requests import StockBarsRequest
+    from alpaca.data.timeframe import TimeFrame
+
+    cache: dict[pd.Timestamp, float | None] = {}
+
+    def price(t: datetime) -> float | None:
+        minute = pd.Timestamp(t).floor("min")
+        if minute not in cache:
+            req = StockBarsRequest(symbol_or_symbols=symbol, timeframe=TimeFrame.Minute,
+                                   start=minute.to_pydatetime(),
+                                   end=(minute + pd.Timedelta(minutes=1)).to_pydatetime(),
+                                   adjustment="raw", feed=DataFeed(feed))
+            df = data_client.get_stock_bars(req).df
+            cache[minute] = float(df["close"].iloc[0]) if len(df) else None
+        return cache[minute]
+    return price

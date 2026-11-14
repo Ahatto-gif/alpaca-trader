@@ -151,6 +151,12 @@ def leaderboard(challengers: list[Challenger], bars: dict[str, pd.DataFrame], *,
         w = target_weight_frame(ch, closes, cash_buffer=cash_buffer)
         r = simulate(w, opens, slippage_bps=slippage_bps, tbill=tbill)
         start = pd.Timestamp(since or ch.since)
+        if ch.kind in ("fixed", "slots"):
+            # Don't count days before every fund existed (QQQM launched 2020-10-13): a
+            # missing price would otherwise count that share as earning 0%.
+            have = opens.reindex(columns=[s for s in ch.symbols() if s in opens]).notna().all(axis=1)
+            if have.any():
+                start = max(start, have.idxmax())
         # Drop the final row: its open-to-open return needs tomorrow's open.
         r = r[(r.index > start)].iloc[:-1]
         rows.append({"challenger": ch.name, "since": start.date(), **summarize(r)})
