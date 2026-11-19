@@ -20,3 +20,5 @@
 {"time": "2026-11-17 09:36:16.811169-05:00", "equity": 97216.57, "signals": {"VOO": 1.0, "QQQM": 1.0}, "weights": {"VOO": 0.4975, "QQQM": 0.4975}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
 {"time": "2026-11-18 09:36:12.313826-05:00", "equity": 96619.24, "signals": {"VOO": 1.0, "QQQM": 1.0}, "weights": {"VOO": 0.4975, "QQQM": 0.4975}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": true}
 {"time": "2026-11-18 09:36:21.988566-05:00", "equity": 96668.31, "signals": {"VOO": 1.0, "QQQM": 1.0}, "weights": {"VOO": 0.4975, "QQQM": 0.4975}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
+{"time": "2026-11-19 09:36:01.870802-05:00", "equity": 98131.33, "signals": {"VOO": 1.0, "QQQM": 1.0}, "weights": {"VOO": 0.4975, "QQQM": 0.4975}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": true}
+{"time": "2026-11-19 09:36:10.156812-05:00", "equity": 98212.38, "signals": {"VOO": 1.0, "QQQM": 1.0}, "weights": {"VOO": 0.4975, "QQQM": 0.4975}, "orders": {}, "submitted": [], "ref_prices": {}, "notes": [], "dry_run": false}
