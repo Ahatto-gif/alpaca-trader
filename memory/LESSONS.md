@@ -1,5 +1,13 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-20
+- **Dashboard 404s again (2026-11-19 14:40):** a tab opened before the 11-18 refresh still held the
+  11-17 links, and the 11-19 clean-up ("keep one previous copy") deleted them. An open page never picks up
+  dataset link changes until reloaded. Assets are now kept for 30 days instead.
+- **First sharp drawdown:** the market sold off after the 11-19 09:36 run. Equity went from 98.1k to 93.7k at the 11-20
+  run (VOO -5.7%, QQQM -7.2% since 11-12). Verified against SPY/QQQ snapshots before trusting it.
+  No action under the strategy: buy-and-hold rides these out by design.
+
 ## 2026-11-14: weekly review
 - **Execution:** 12 fills average +3.6 bps (median +1.8) against the 5 bps assumption, so slippage_bps
   stays at 5. The outlier was the VOO buy on 11-12 at +17 bps, the first fill in a thinner fund.
