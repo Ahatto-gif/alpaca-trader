@@ -2,3 +2,4 @@
 - 2026-11-06: scheduled run traded fine (no orders needed) but its git push got a 403: scheduled sessions had no access to the repo. Log line saved from the owner's session; scheduled tasks re-pointed at that session.
 - 2026-11-12: switched SPY/QQQ -> VOO/QQQM as planned (DECISIONS 2026-11-12). All 4 orders filled. Buys filled above decision price: VOO +17 bps (694.10 -> 695.28), QQQM +9 bps; watch whether VOO/QQQM (thinner than SPY/QQQ) fill worse at 9:35.
 - 2026-11-13: scheduled run fired 50 min late (15:24 UTC instead of 14:35); no trades needed.
+- 2026-11-20: market sell-off: equity 98.1k at 11-19's 09:36 run -> 93.7k at 11-20's (VOO -5.7%, QQQM -7.2% since 11-12). Verified against SPY/QQQ snapshots; no trades needed, holding per plan.
