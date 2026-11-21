@@ -79,3 +79,13 @@ def test_trend_leverage_switches_with_the_trend():
     assert w.iloc[3].sum() == pytest.approx(1.0)    # warm-up: no average yet -> off
     assert w.iloc[15].sum() == pytest.approx(1.3)   # rising: above the average -> on
     assert w.iloc[-1].sum() == pytest.approx(1.0)   # falling: below the average -> off
+
+
+def test_stopped_challengers_are_kept_but_not_tracked(tmp_path):
+    from trader.challengers import load_challengers
+    p = tmp_path / "c.yaml"
+    p.write_text("challengers:\n  a: {kind: fixed, since: 2026-01-01, weights: {SPY: 1}}\n"
+                 "  b: {kind: fixed, since: 2026-01-01, weights: {QQQ: 1}, stopped: 2026-02-01}\n")
+    assert [c.name for c in load_challengers(p)] == ["a"]
+    assert [c.name for c in load_challengers(p, include_stopped=True)] == ["a", "b"]
+    assert "stopped" not in load_challengers(p, include_stopped=True)[1].spec

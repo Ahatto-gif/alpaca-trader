@@ -43,11 +43,15 @@ class Challenger:
         return list(self.spec["symbols"])
 
 
-def load_challengers(path: str | Path) -> list[Challenger]:
+def load_challengers(path: str | Path, include_stopped: bool = False) -> list[Challenger]:
+    """Tracked strategies. An entry with `stopped: <date>` stays in the file as history but
+    is no longer simulated (pass include_stopped=True to get it anyway)."""
     raw = yaml.safe_load(Path(path).read_text()) or {}
     out = []
     for name, c in (raw.get("challengers") or {}).items():
-        spec = {k: v for k, v in c.items() if k not in ("kind", "since", "note")}
+        if c.get("stopped") and not include_stopped:
+            continue
+        spec = {k: v for k, v in c.items() if k not in ("kind", "since", "note", "stopped", "stop_note")}
         out.append(Challenger(name, c["kind"], str(c["since"]), spec, c.get("note", "")))
     return out
 

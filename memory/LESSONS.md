@@ -1,5 +1,20 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-21: weekly review
+- **First real drawdown.** The account is -9.55% since 11-03 (SPY -8.01%), and about -9.7% since the
+  VOO/QQQM switch on 11-12, at the 11-20 close. The Nasdaq-100 half falls harder in a sell-off
+  (QQQM -11.0%, VOO -8.6% from our fills). This is expected behaviour for the strategy, so nothing changes.
+- **The account vs champion gap was timing, not execution.** The forward record showed -6.63% while the
+  account showed about -9.7%. The forward record runs 11-13 open to 11-20 open, so it hadn't yet counted
+  Friday's open-to-close fall (VOO -3.1%, QQQM -4.5%). From our 11-12 fills to the 11-20 close it is -9.77%,
+  matching the account. When comparing, line up the windows before suspecting execution.
+- **Leverage in a sell-off:** core_spy_qqq_x1.5 is -10.0% over 11 days vs -6.6% at 1x, and
+  core_trend_lev_1.3 is -8.6% over 5 days vs -6.6%. Too short to judge, but it illustrates the owner's concern.
+- **Execution:** no new fills this week (12 total, mean +3.6 bps), so slippage_bps stays at 5.
+- **Challenger list was at 12, over the 10 cap.** core_spy_qqq (duplicate of the champion) and
+  sma_10_200_big8 (settled by research) are now `stopped` and kept in the file as history.
+- **Promotion:** nothing can be promoted (at most 11 forward days vs 126 needed). No new challengers.
+
 ## 2026-11-20
 - **Dashboard 404s again (2026-11-19 14:40):** a tab opened before the 11-18 refresh still held the
   11-17 links, and the 11-19 clean-up ("keep one previous copy") deleted them. An open page never picks up
