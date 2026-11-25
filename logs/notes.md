@@ -3,3 +3,4 @@
 - 2026-11-12: switched SPY/QQQ -> VOO/QQQM as planned (DECISIONS 2026-11-12). All 4 orders filled. Buys filled above decision price: VOO +17 bps (694.10 -> 695.28), QQQM +9 bps; watch whether VOO/QQQM (thinner than SPY/QQQ) fill worse at 9:35.
 - 2026-11-13: scheduled run fired 50 min late (15:24 UTC instead of 14:35); no trades needed.
 - 2026-11-20: market sell-off: equity 98.1k at 11-19's 09:36 run -> 93.7k at 11-20's (VOO -5.7%, QQQM -7.2% since 11-12). Verified against SPY/QQQ snapshots; no trades needed, holding per plan.
+- 2026-11-25: market gapped down at the open (SPY -2.75%, QQQ -4.2% vs prior close); account -3.42% on the day tripped the 3% daily-loss rule (buys blocked). No trades needed anyway; verified against snapshots. Account -8.93% since 11-03 vs SPY -7.33%.
