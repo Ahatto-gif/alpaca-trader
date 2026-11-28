@@ -1,5 +1,20 @@
 # Lessons (append new ones at the top, with the date and the evidence)
 
+## 2026-11-28: weekly review
+- **Recovery week.** The account is -4.16% since 11-03 (SPY -3.45%) at the 11-27 close, up from -9.55% a
+  week earlier. Equity 95,842 = 71 VOO + 176 QQQM + 1,110 cash at the 11-27 closes, so it matches exactly.
+  From our 11-12 fills it is -4.35%. The forward record shows -5.32% because it starts at the 11-13 open
+  (about 0.4% above our fills) and doesn't yet count Friday's open-to-close (+0.4%). No execution issue.
+- **The daily-loss rule fired harmlessly** on 11-25 (-3.42% vs the prior close; buys blocked, none needed).
+  For buy-and-hold its only effect is to delay a cash-sweep or rebalance buy by a day on a big down day.
+  Keep it: it's cheap insurance against a bug that tries to buy into a crash.
+- **Holidays work:** on Thanksgiving (11-26) the run saw the market closed and did nothing. The 11-27 half
+  day traded normally at 09:36 ET.
+- **Forward records** (9-15 days, all noise): every strategy is down 3-8%. momentum_12_1_top10 has the
+  smallest loss (-2.9%) and core_spy_qqq_x1.5 the largest (-8.3%, max DD -13.3%). Nothing near promotion.
+- **Execution:** no new fills (12 total, mean +3.6 bps), so slippage_bps stays at 5. No new challengers
+  (the list is at the 10 cap).
+
 ## 2026-11-21: weekly review
 - **First real drawdown.** The account is -9.55% since 11-03 (SPY -8.01%), and about -9.7% since the
   VOO/QQQM switch on 11-12, at the 11-20 close. The Nasdaq-100 half falls harder in a sell-off
